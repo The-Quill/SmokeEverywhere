@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Unstar/unpin/delete for room owners
 // @namespace    http://stackoverflow.com/users/578411/rene
-// @version      0.1
-// @description  RO Transcript
+// @version      0.2
+// @description  RO Transcript 
 // @author       rene
 // @match        *://chat.stackoverflow.com/transcript/*
 // @match        *://chat.stackexchange.com/transcript/*
@@ -27,12 +27,11 @@
             }
         });
     }
-
-    // moves the message found in a node to the Trash room
+    
     function movetotrash(node) {
         var fkey = document.getElementById('fkey').value,
             id = node.parentElement.id.split('-')[1],
-            target = 48058, /* hardcoded the Trash Room on SO for now */
+            target = 48058,
             href = $(node.parentElement).find('a'),
             re = /(?:\w|[.\/:])*\/transcript\/(\d+)/,
             matches;
@@ -43,12 +42,11 @@
                     type: 'POST',
                     data: 'ids=' + id + '&to=' + target + '&fkey=' + fkey,
                     url: '/admin/movePosts/' + matches[1]
-                });
+                }).complete(function(){ $(node.parentElement).fadeOut(2000);  });
             }
         }
     }
 
-    // add an extra item to the dialog
     function unpinBuilder(node) {
         var outer = document.createElement('span'),
             sprite = document.createElement('span'),
@@ -68,8 +66,7 @@
         );
         return outer;
     }
-
-    // add an move to trash item to the dialog
+    
     function moveBuilder(node) {
         var outer = document.createElement('span'),
             sprite = document.createElement('span'),
@@ -77,6 +74,7 @@
 
         sprite.className = "sprite ";
         outer.className = "";
+        outer.style.cursor = "pointer";
         outer.appendChild(sprite);
         outer.appendChild(text);
 
@@ -90,7 +88,6 @@
         return outer;
     }
 
-    // adds all possible RO actions to the dialog
     function addActions(node) {
         var prevNode,
             currentNode,
@@ -116,7 +113,6 @@
         }
     }
 
-    // handles mutations
     function processMutationRecord(record) {
         var node,
             i;
@@ -130,7 +126,6 @@
         }
     }
 
-    // listen for mutations
     var mut = new MutationObserver(function (items, src) {
         var i;
         for (i = 0; i < items.length; i = i + 1) {
