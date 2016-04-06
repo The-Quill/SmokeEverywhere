@@ -9,7 +9,7 @@
 // @grant          none
 // @license        MIT
 // @namespace      http://github.com/SO-Close-Vote-Reviewers/UserScripts/Magic™Editor
-// @version        1.5.2.67
+// @version        1.5.3.0
 // @description    Fix common grammar/usage annoyances on Stack Exchange posts with a click
 //                 Forked from https://github.com/AstroCB/Stack-Exchange-Editor-Toolkit
 // @include        /^https?:\/\/\w*.?(stackoverflow|stackexchange|serverfault|superuser|askubuntu|stackapps)\.com\/(questions|posts|review|tools)\/(?!tagged\/|new\/).*/
@@ -2160,6 +2160,7 @@
                     var update = capChar + fWordPost + sentencePost;
                     return update;
                 },
+                debug: false,
                 reason: App.consts.reasons.grammar
             },
             i: { // https://regex101.com/r/uO7qG0/2
@@ -2399,11 +2400,13 @@
             var replacement = edit.replacement;
             var reasoning = edit.reason;
             var debug = edit.debug;
+            var rerun = edit.rerun;
             
             if (debug) {
                 console.log(input);
                 console.log(expression.toString());
                 console.log("replacement: '"+replacement+"'");
+                console.log("rerun: "+JSON.stringify(rerun))
             }
             // If there is nothing to search, exit
             if (!input) return false;
@@ -2434,6 +2437,7 @@
             return count > 0 ? {
                 reason: reasoning,
                 fixed: String(input),
+                rerun: rerun,
                 count: count
             } : false;
         };
@@ -2659,10 +2663,23 @@
                     continue;  // Skip title-only edits if not editing title.
                 var fix = App.funcs.fixIt(data[field], App.edits[j]);
                 if (!fix) continue;
+                if (debug) console.log("fix.rerun: "+JSON.stringify(fix.rerun));
                 if (fix.reason in App.globals.reasons) App.globals.reasons[fix.reason].count += fix.count;
                 else App.globals.reasons[fix.reason] = { reason:fix.reason, editId:j, count:fix.count };
                 data[field] = fix.fixed;
                 App.edits[j].fixed = true;
+                if (fix.rerun) {
+                    for (var k in fix.rerun) {
+                        let reEdit = fix.rerun[k];
+                        console.log("reEdit="+reEdit);
+                        let refix = App.funcs.fixIt(data[field], App.edits[reEdit]);
+                        if (!refix) continue;
+                        if (refix.reason in App.globals.reasons) App.globals.reasons[refix.reason].count += refix.count;
+                        else App.globals.reasons[refix.reason] = { reason:refix.reason, editId:reEdit, count:refix.count };
+                        data[field] = refix.fixed;
+                        App.edits[reEdit].fixed = true;
+                   }
+                }
             }
             
             // Remove silent change reason
