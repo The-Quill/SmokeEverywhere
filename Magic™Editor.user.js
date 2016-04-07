@@ -2193,8 +2193,8 @@
                 replacement: "$1.e. ",
                 reason: App.consts.reasons.grammar
             },
-            eg: { // https://regex101.com/r/qH2oT0/7
-                expr: /\b(e)\.?g[.,; :]+/gi,
+            eg: { // https://regex101.com/r/qH2oT0/8
+                expr: /\b(e)\.?g(?:[.,; :]+|(?=\n))/gi,
                 replacement: "$1.g. ",
                 reason: App.consts.reasons.grammar
             },
