@@ -2329,7 +2329,14 @@
                 expr: /^(?:I have|I've)(?: got)* a question[ \t,.?:-]*(?:about|when)?[ \t,.?:-]*/gi,
                 replacement: "",
                 rerun: ["firstcaps"],
-                debug: true,
+                debug: false,
+                reason: App.consts.reasons.noise
+            },
+            no_rep_to_comment: {  // https://regex101.com/r/vL2uI0/3
+                expr: /(?:[^\n.!?:]*(?:rep|reputation)\b[^.!?:\n\r]+\bcomment(?:[.!?:\n\r)]+|[^.!?:\n\r]*?\b(?:[, ]*but|[, ]*so|[.,)]+)\b))/gi,
+                replacement: "",
+                rerun: ["firstcaps"],
+                debug: false,
                 reason: App.consts.reasons.noise
             },
             /*
