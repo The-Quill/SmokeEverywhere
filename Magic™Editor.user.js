@@ -104,7 +104,7 @@
         App.consts.reasons = {
             legalSO:       "'Stack Overflow' is the legal name",
             legalSE:       "'Stack Exchange' is the legal name",
-            tidyTitle:     "tidied title",
+            tagTitle:      "removed tags from title",
             trademark:     "trademark capitalization",
             acronym:       "acronym capitalization",
             spelling:      "spelling",
@@ -128,14 +128,15 @@
 
         // Define edit rules
         App.edits = {
-            // Tidy the title
+            // Handle all-caps posts first
             noneedtoyell: {
                 expr: /^((?=.*[A-Z])[^a-z]*)$/g,
                 replacement: function(input) {
                     return input.trim().substr(0, 1).toUpperCase() + input.trim().substr(1).toLowerCase();
                 },
-                reason: App.consts.reasons.tidyTitle
+                reason: App.consts.reasons.grammar
             },
+            // Remove tags from title
             taglist: {  // https://regex101.com/r/wH4oA3/21
                 expr: new RegExp(  "(?:^(?:[(]?(?:_xTagsx_)(?:and|[ ,.&+/-])*)+[:. \)-]*|\b(?:[:. \(-]|in|with|using|by|for)*(?:(?:_xTagsx_)(?:and|[ ,&+/)-])*)+([?.! ]*)$)"
                                  .replace(/_xTagsx_/g,App.globals.taglist.map(escapeTag).join("|")),
@@ -143,7 +144,8 @@
                                  'gi'),
                 replacement: "$1",
                 debug: false,
-                reason: App.consts.reasons.tidyTitle
+                titleOnly: true,
+                reason: App.consts.reasons.tagTitle
             },
             so: {
                 expr: /\bstack\s*overflow\b/gi,
@@ -2659,7 +2661,7 @@
             for (var j in App.edits) for (var field in fields) {
                 var debug = App.edits[j].debug;
                 if (debug) console.log("edit "+j+" in "+field);
-                if (App.consts.reasons.tidyTitle == App.edits[j].reason && 'title' !== field)
+                if (App.edits[j].titleOnly && 'title' !== field)
                     continue;  // Skip title-only edits if not editing title.
                 var fix = App.funcs.fixIt(data[field], App.edits[j]);
                 if (!fix) continue;
