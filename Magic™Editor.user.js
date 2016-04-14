@@ -2398,6 +2398,8 @@
             numbered_list: { // https://regex101.com/r/mI1aV3/3
                 expr: /([\n\r]|^)+\(?([ \t]*[\d]+)[).:-] */gm,
                 replacement: "$1$1$2. ",
+                rerun: ["firstcaps"],
+                debug: false,
                 reason: App.consts.reasons.layout
             },
             // DISABLED temporarily - see Issue #115
