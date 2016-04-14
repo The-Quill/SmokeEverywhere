@@ -137,8 +137,9 @@
                 reason: App.consts.reasons.grammar
             },
             // Remove tags from title
-            taglist: {  // https://regex101.com/r/wH4oA3/21
-                expr: new RegExp(  "(?:^(?:[(]?(?:_xTagsx_)(?:and|[ ,.&+/-])*)+[:. \)-]*|\b(?:[:. \(-]|in|with|using|by|for)*(?:(?:_xTagsx_)(?:and|[ ,&+/)-])*)+([?.! ]*)$)"
+            taglist: {  // https://regex101.com/r/wH4oA3/22
+                // WARNING: the expression from regex101 must have backslashes escaped here - wbn to automate this...
+                expr: new RegExp(  "(?:^(?:[(]?(?:_xTagsx_)(?!\\.\\w)(?:and|[ ,.&+/-])*)+[:. \\)-]*|\\b(?:[:. \\(-]|in|with|using|by|for)*(?:(?:_xTagsx_)(?:and|[ ,&+/)-])*)+([?.! ]*)$)"
                                  .replace(/_xTagsx_/g,App.globals.taglist.map(escapeTag).join("|")),
                                  //.replace(/\\(?=[bsSdDwW])/g,"\\"), // https://regex101.com/r/pY1hI2/1 - WBN to figure this out.
                                  'gi'),
@@ -176,7 +177,7 @@
                 reason: App.consts.reasons.trademark
             },
             meteor: {  // must appear before "javascript"
-                expr: /([^\b\w.]|^)meteor *(js)?\b/gi,
+                expr: /([^\b\w.]|^)meteor(?: *(js))?\b(?![.-]\w)/gi,
                 replacement: function (str,pre,uppercase) {
                     var fixed = pre + "Meteor" + (uppercase ? uppercase.toUpperCase() : '');
                     return fixed;
@@ -199,17 +200,17 @@
                 reason: App.consts.reasons.trademark
             },
             jquery: {
-                expr: /\bjque?rr?y\b/gi,  // jqury, jquerry, jqurry... ~600 spelling mistakes
+                expr: /\bjque?rr?y\b(?![.-]\w)/gi,  // jqury, jquerry, jqurry... ~600 spelling mistakes
                 replacement: "jQuery",
                 reason: App.consts.reasons.trademark
             },
             angular: {
-                expr: /\bangular(?:js)?\b(?!-)/gi,
+                expr: /\bangular(?:js)?\b(?![.-]\w)/gi,
                 replacement: "AngularJS",
                 reason: App.consts.reasons.trademark
             },
             php: {
-                expr: /(?:[^\b\w.]|^)php[\d]?\b(?!\.ini)/gi,
+                expr: /(?:[^\b\w.]|^)php[\d]?\b(?![.-]\w)/gi,
                 replacement: function (match) { return match.toUpperCase(); },
                 reason: App.consts.reasons.trademark
             },
@@ -219,7 +220,7 @@
                 reason: App.consts.reasons.trademark
             },
             java: {
-                expr: /([^\b\w.]|^)java\b/gi,
+                expr: /([^\b\w.]|^)java\b(?![.-]\w)/gi,
                 replacement: "$1Java",
                 reason: App.consts.reasons.trademark
             },
@@ -229,7 +230,7 @@
                 reason: App.consts.reasons.trademark
             },
             android: {
-                expr: /\bandroid\b/gi,
+                expr: /\bandroid\b(?![.-]\w)/gi,
                 replacement: "Android",
                 reason: App.consts.reasons.trademark
             },
@@ -280,7 +281,7 @@
                 reason: App.consts.reasons.trademark
             },
             apache: {
-                expr: /\bapache([\d])?\b/gi,
+                expr: /\bapache([\d])?\b(?![.-]\w)/gi,
                 replacement: "Apache$1",
                 reason: App.consts.reasons.trademark
             },
@@ -430,7 +431,7 @@
                reason: App.consts.reasons.trademark
             },
             twitter: {
-                expr: /\btwitter\b/gi,
+                expr: /\btwitter\b(?![.-]\w)/gi,
                 replacement: "Twitter",
                 reason: App.consts.reasons.trademark
             },
@@ -952,6 +953,11 @@
             },
             hdp: {  // Hadoop related acronyms
                 expr: /(?:[^\b\w.]|^)h(?:dp|dfs|sm)\b/gi,
+                replacement: function (match) { return match.toUpperCase(); },
+                reason: App.consts.reasons.acronym
+            },
+            ide: {
+                expr: /(?:[^\b\w.]|^)ide\b/gi,
                 replacement: function (match) { return match.toUpperCase(); },
                 reason: App.consts.reasons.acronym
             },
@@ -2113,6 +2119,21 @@
                 replacement: "$1pecific",
                 reason: App.consts.reasons.spelling
             },
+            computer: {  // https://regex101.com/r/kJ3iY8/1
+                expr: /\b(c)o?m?p[ue]?t?[eoa]r/gi,
+                replacement: "$1omputer",
+                reason: App.consts.reasons.spelling
+            },
+            something_like: {  // Some thing like -- 6,468 posts 
+                expr: /\b(s)ome thing like/gi,
+                replacement: "$1omething like",
+                reason: App.consts.reasons.spelling
+            },
+            maybe_something: {  // May be something -- 4,259 posts 
+                expr: /\b(m)ay be some ?thing/gi,
+                replacement: "$1aybe something",
+                reason: App.consts.reasons.spelling
+            },
             /*
             ** Grammar - Correct common grammatical errors.
             **/
@@ -2136,8 +2157,8 @@
                     // words starting with vowels being incorrectly treated, check that the script
                     // has not had a unicode substitution error. (Git did this do me, once.)
                     function AvsAnOverride_(fword) {
-                        var exceptionsA_ = /^(?:uis?|data|java|form\w*)/i;
-                        var exceptionsAn_ = /(?:^[lr]value|a\b|sql)/i;
+                        var exceptionsA_ = /^(?:uis?|data|java|form\w*|rota|cd)/i;
+                        var exceptionsAn_ = /(?:^[lr]value|a\b|sql|ns)/i;
                         return (exceptionsA_.test(fword) ? article[0] :
                                 exceptionsAn_.test(fword) ? article[0]+"n" : false);
                     }
@@ -2145,9 +2166,9 @@
                 reason: App.consts.reasons.grammar
             },
             firstcaps: {
-                //    https://regex101.com/r/qR5fO9/40
+                //    https://regex101.com/r/qR5fO9/41
                 // Regex finds all sentences; replacement must determine whether it needs to capitalize.
-                expr: /(([A-Z_a-z]|\d(?!\d*\. ))(\S*))((?:(?:etc\.|i\.e\.|e\.g\.|vs\.|\.\.\.|\w+\.(?![\s")])|[*-]+|\n(?![ \t]*\n| *(?:[*-]|\d+\.))|[^.?!\n]?))+(?:([.?!])(?=[\s")]|$)|\n\n|\n(?= *[*-])|\n(?= *\d+\.)|$))/gi,
+                expr: /(([A-Z_a-z]|\d(?!\d*\. ))(\S*))((?:(?:etc\.|i\.e\.|e\.g\.|vs\.|\.\.\.|\w*\.(?![\s")])|[*-]+|\n(?![ \t]*\n| *(?:[*-]|\d+\.))|[^.?!\n]?))+(?:([.?!])(?=[\s")]|$)|\n\n|\n(?= *[*-])|\n(?= *\d+\.)|$))/gi,
                 replacement: function(sentence, fWord, fChar, fWordPost, sentencePost, endpunc) { 
                     var capChar = fChar.toUpperCase();
                     if (sentence === "undefined"||capChar == fChar) return sentence;  // MUST match sentence, or gets counted as a change.
