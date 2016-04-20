@@ -1231,8 +1231,8 @@
                 replacement: "$1oordinate$2",
                 reason: App.consts.reasons.spelling
             },
-            argument: {  // https://regex101.com/r/iU2vK9/1
-                expr: /\b(a)rg?[ue]+ment(s)?\b/gi,
+            argument: {  // https://regex101.com/r/iU2vK9/2
+                expr: /\b(a)rg?[ue]+m[ea]nt(s)?\b/gi,
                 replacement: "$1rgument$2",
                 reason: App.consts.reasons.spelling
             },
@@ -1954,7 +1954,7 @@
                 reason: App.consts.reasons.spelling
             },
             receive: {  // http://www.oxforddictionaries.com/words/common-misspellings
-                expr: /\b(r)eciev(e[rds]?|ing)/gi,
+                expr: /\b(r)ec[ie]+v(e[rds]?|ing)/gi,
                 replacement: "$1eceiv$2",
                 reason: App.consts.reasons.spelling
             },
@@ -2119,8 +2119,8 @@
                 replacement: "$1pecific",
                 reason: App.consts.reasons.spelling
             },
-            computer: {  // https://regex101.com/r/kJ3iY8/1
-                expr: /\b(c)o?m?p[ue]?t?[eoa]r/gi,
+            computer: {  // https://regex101.com/r/kJ3iY8/2
+                expr: /\b(c)o?m?p[ue]?t?[eoa]r(s)?\b/gi,
                 replacement: "$1omputer",
                 reason: App.consts.reasons.spelling
             },
@@ -2132,6 +2132,31 @@
             maybe_something: {  // May be something -- 4,259 posts 
                 expr: /\b(m)ay be some ?thing/gi,
                 replacement: "$1aybe something",
+                reason: App.consts.reasons.spelling
+            },
+            targeting: {  // 3,151 posts 
+                expr: /\b(t)argetting/gi,
+                replacement: "$1argeting",
+                reason: App.consts.reasons.spelling
+            },
+            column: {  // 1,363 posts 
+                expr: /\b(c)olou?mn?(s)?/gi,
+                replacement: "$1olumn$2",
+                reason: App.consts.reasons.spelling
+            },
+            array: { 
+                expr: /\b(a)(?:rry|ray)(s)?/gi,
+                replacement: "$1rray$2",
+                reason: App.consts.reasons.spelling
+            },
+            suggest: { // https://regex101.com/r/mH1fY7/1
+                expr: /\b(s)ugest/gi,
+                replacement: "$1uggest",
+                reason: App.consts.reasons.spelling
+            },
+            synchronous: { // https://regex101.com/r/vG6jQ8/1
+                expr: /(s)[yi]nch?ron[ou]+s/gi,
+                replacement: "$1ynchronous",
                 reason: App.consts.reasons.spelling
             },
             /*
@@ -2207,7 +2232,7 @@
                 reason: App.consts.reasons.grammar
             },
             ive: {
-                expr: /\bi['`´’ ]*v['`´’ ]*e\b/gi,
+                expr: /\bi['`´’ ]*v['`´’ ]*e?\b/gi,
                 replacement: "I've",
                 reason: App.consts.reasons.grammar
             },
@@ -2308,42 +2333,50 @@
                 // https://regex101.com/r/tT2pK6/9
                 expr: /([-_*]+[\t ]*\b(edit|update)\b([\t ]*#?[0-9]+)?[\t ]*:*[\t ]*[-_*]+:*|[\t ]*\b(edit|update)\b([\t ]*#?[0-9]+)?\s*:+[\t ]*)/gi,
                 replacement: "",
+                rerun: ["firstcaps"],
                 reason: App.consts.reasons.noise
             },
             // http://meta.stackexchange.com/questions/2950/should-hi-thanks-taglines-and-salutations-be-removed-from-posts/93989#93989
             salutation: { // https://regex101.com/r/yS9lN8/10
                 expr: /^\s*(?:dears?\b.*$|greetings?\b.*$|(?:hi(?:ya)*|hel+o+|heya?|hai|g'?day|good\s?(?:evening|morning|day|afternoon)|ahoy|folks|guys)[,\s]*(?:\s+(?:all|guys|folks|friends?|there|everyone|people|matey?s?|bud+(y|ies))*))(?:[,.!?: ]*|$)/gmi,
                 replacement: "",
+                rerun: ["firstcaps"],
                 reason: App.consts.reasons.noise
             },
-            badphrases: { // https://regex101.com/r/gE2hH6/16
-                expr: /[^\n.!?:]*(?:thanks|thank[ -]you|please|help|suggest(?:ions))\b(?:[ .?!]*$|[^\n.!?:]*\b(?:help|ap+reciat\w*|me|advan\w*|a ?lot)\b[^\n.!?:]*)[.!?_*]*/gim,
+            badphrases: { // https://regex101.com/r/gE2hH6/17
+                expr: /[^\n.!?:]*(?:thanks|thank[ -]you|please|help|suggest(?:ions))\b(?:[ .?!]*$|[^\n.!?:]*\b(?:help|ap+reciat\w*|me|advan\w*|a ?lot|beforehand)\b[^\n.!?:]*)[.!?_*]*/gim,
                 replacement: "",
+                rerun: ["firstcaps"],
                 reason: App.consts.reasons.noise
             },
             imnew: {
                 expr: /(?! )[\w\s]*\bi[' ]?a?m +(?:kinda|really) *new\w* +(?:to|in) *\w* *(?:and|[;,.!?])? */gi,
                 replacement: "",
+                rerun: ["firstcaps"],
                 reason: App.consts.reasons.noise
             },
             complimentaryClose: {  // https://regex101.com/r/hL3kT5/5
                 expr: /^\s*(?:(?:kind(?:est)* |best )*regards?|cheers?|greetings?|thanks|thank you)\b,?.*[\r\n]{0,2}.*(?:[.!?: ]*|$)/gim,
                 replacement: "",
+                rerun: ["firstcaps"],
                 reason: App.consts.reasons.noise
             },
             sorry4english: { // https://regex101.com/r/pG3oD6/8
                 expr: /[^\n.!?]*((sorry|ap+olog.*|forgive)\b[^.!?:\n\r]+\b((bad|my|poor) english)|(english[^.!?:\n\r]+)\b(tongue|language))\b[^.!?:\n\r]*(?:[.!?:_*])*/gi,
                 replacement: "",
+                rerun: ["firstcaps"],
                 reason: App.consts.reasons.noise
             },
             hope_this_helps: {  // https://regex101.com/r/yF1uY0/1
                 expr: /^\s*i? ?\bhope\b[^\n.!?:]*helps?[^\n.!?:]*[,.!?: ()^-]*$/gmi,
                 replacement: "",
+                rerun: ["firstcaps"],
                 reason: App.consts.reasons.noise
             },
             enter_code_here: {
                 expr: /\benter (?:code|image description|link description) here\b/gi,
                 replacement: "",
+                rerun: ["firstcaps"],
                 reason: App.consts.reasons.noise
             },
             i_have_a_question: {  // https://regex101.com/r/uM0nQ1/1
@@ -2354,7 +2387,7 @@
                 reason: App.consts.reasons.noise
             },
             no_rep_to_comment: {  // https://regex101.com/r/vL2uI0/3
-                expr: /(?:[^\n.!?:]*(?:rep|reputation)\b[^.!?:\n\r]+\bcomment(?:[.!?:\n\r)]+|[^.!?:\n\r]*?\b(?:[, ]*but|[, ]*so|[.,)]+)\b))/gi,
+                expr: /(?:[^\n.!?:]*(?:rep|reputation)\b[^.!?:\n\r]+\bcomment(?:[.!?:\n\r)]+|[^.!?:\n\r]*?(?:\bbut\b|[, ]*so|[.,)]+)))/gi,
                 replacement: "",
                 rerun: ["firstcaps"],
                 debug: false,
@@ -2399,6 +2432,12 @@
                 expr: /([\n\r]|^)+\(?([ \t]*[\d]+)[).:-] */gm,
                 replacement: "$1$1$2. ",
                 rerun: ["firstcaps"],
+                debug: false,
+                reason: App.consts.reasons.layout
+            },
+            no_html_break: { // https://regex101.com/r/xP2oW9/1
+                expr: / *\< *br *\/? *> */gi,
+                replacement: "  ",
                 debug: false,
                 reason: App.consts.reasons.layout
             },
