@@ -1,14 +1,16 @@
 // ==UserScript==
-// @name           Stack Exchange CV Request Generator
-// @namespace      https://github.com/SO-Close-Vote-Reviewers/
-// @version        1.5.13
-// @description    This script generates formatted close vote requests and sends them to a specified chat room, fixes #65
-// @author         @TinyGiant
-// @contributor    @rene @Tunaki
+// @name           Smoke Everywhere
+// @namespace      https://github.com/The-Quill
+// @version        1.0.0
+// @description    This script generates formatted spam reports and sends them to a specified chat room
+// @author         @Quill
+// @contributor    @TinyGiant @rene @Tunaki
 // @include        /^https?:\/\/\w*.?(stackexchange.com|stackoverflow.com|serverfault.com|superuser.com|askubuntu.com|stackapps.com|mathoverflow.net)\/q(uestions)?\/\d+/
 // @require        https://code.jquery.com/jquery-2.1.4.min.js
 // @connect        rawgit.com
 // @connect        chat.stackoverflow.com
+// @connect        chat.stackexchange.com
+// @connect        chat.meta.stackexchange.com
 // @grant          GM_xmlhttpRequest
 // ==/UserScript==
 
@@ -19,17 +21,13 @@ if(typeof StackExchange === "undefined")
     var isclosed = $(".close-question-link").data("isclosed");
 
     var reasons = {
-        't': 'too broad',
-        'u': 'unclear',
-        'p': 'pob',
-        'd': 'duplicate',
-        'm': 'no mcve',
-        'r': 'no repro',
-        's': 'superuser',
-        'f': 'serverfault',
-        'l': 'library/tool/resource',
-        'g': 'gimme-teh-codez',
-        get: function(r) {
+        's': 'spam',
+        'n': 'naa',
+        'r': 'rude',
+        'fp': 'fp',
+        'tp': 'tp',
+        'k': 'k',
+            get: function(r) {
             var a = r.split(' ');
             a.forEach(function(v,i){
                 a[i] = reasons[v] && v !== 'get' ? reasons[v] : v;
@@ -38,7 +36,7 @@ if(typeof StackExchange === "undefined")
         }
     };
 
-    var URL = "https://rawgit.com/SO-Close-Vote-Reviewers/UserScripts/master/SECloseVoteRequestGenerator.user.js";
+    var URL = "https://rawgit.com/The-Quill/SmokeEverywhere/master/SmokeEverywhere.user.js";
     var notifyint = 0;
     function notify(m,t) {
         var timeout;
@@ -63,10 +61,10 @@ if(typeof StackExchange === "undefined")
         while (current.length < proposed.length) current.push("0");
 
         for (var i = 0; i < proposed.length; i++) {
-            if (parseInt(proposed[i]) > parseInt(current[i])) {
+            if (Number(proposed[i]) > Number(current[i])) {
                 return true;
             }
-            if (parseInt(proposed[i]) < parseInt(current[i])) {
+            if (Number(proposed[i]) < Number(current[i])) {
                 return false;
             }
         }
@@ -76,16 +74,16 @@ if(typeof StackExchange === "undefined")
     function checkUpdates(force) {
         GM_xmlhttpRequest({
             method: 'GET',
-            url: 'https://rawgit.com/SO-Close-Vote-Reviewers/UserScripts/master/SECloseVoteRequestGenerator.version',
+            url: 'https://rawgit.com/The-Quill/SmokeEverywhere/master/SmokeEverywhere.version',
             onload: function(response) {
                 var VERSION = response.responseText.trim();
                 if(isVersionNewer(VERSION,GM_info.script.version)) {
                     var lastAcknowledgedVersion = getStorage('LastAcknowledgedVersion');
                     if(lastAcknowledgedVersion != VERSION || force) {
-                        if(confirm('A new version of The Close Vote Request Generator is available, would you like to install it now?'))
+                        if(confirm('A new version of SmokeEverywhere is available, would you like to install it now?'))
                             window.location.href = URL;
                         else
-                            setStorage('LastAcknowledgedVersion',VERSION);
+                            setStorage('LastAcknowledgedVersion', VERSION);
                     }
                 } else if(force) notify('No new version available');
             }
@@ -232,14 +230,14 @@ if(typeof StackExchange === "undefined")
     };
 
     //Wrap local storage access so that we avoid collisions with other scripts
-    var prefix = "SECloseVoteRequestGenerator_"; //prefix to avoid clashes in localstorage
+    var prefix = "SmokeEverywhere_"; //prefix to avoid clashes in localstorage
     function getStorage(key) { return localStorage[prefix + key]; }
     function setStorage(key, val) { return (localStorage[prefix + key] = val); }
 
     var base = 'http://' + window.location.hostname;
 
     if(!getStorage(base + 'room'))
-        setStorage(base + 'room', 'http://chat.stackoverflow.com/rooms/41570/so-close-vote-reviewers');
+        setStorage(base + 'room', 'http://chat.stackexchange.com/rooms/11540/charcoal-hq');
 
     RoomList.init();
 
@@ -398,13 +396,13 @@ if(typeof StackExchange === "undefined")
     });
     setTimeout(checkUpdates);
     var closereasons = {
-        4: "General Computing",
-        7: "Serverfault.com",
-        16: "Request for Off-Site Resource",
-        13: "No MCVE",
-        11: "Typo or Cannot Reproduce",
-        3: "custom",
-        2: "Belongs on another site"
+        // 4: "General Computing",
+        // 7: "Serverfault.com",
+        // 16: "Request for Off-Site Resource",
+        // 13: "No MCVE",
+        // 11: "Typo or Cannot Reproduce",
+        // 3: "custom",
+        // 2: "Belongs on another site"
     };
     $('.close-question-link').click(function(){
         var cpcheck = setInterval(function(){
@@ -429,7 +427,7 @@ if(typeof StackExchange === "undefined")
                     var parent = selected.parent().parent();
                     $('input[type="text"]', CVRGUI.items.send).val($('textarea',parent).val().replace($('[type="hidden"]',parent).val(),''));
                 }
-                discard= checkbox.find('input').is(':checked') && $('form', CVRGUI.items.send).submit();
+                discard = checkbox.find('input').is(':checked') && $('form', CVRGUI.items.send).submit();
             });
         }, 100);
     });
