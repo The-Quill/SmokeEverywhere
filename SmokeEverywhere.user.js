@@ -8,6 +8,7 @@
 // @include        /^https?:\/\/\w*.?(stackexchange.com|stackoverflow.com|serverfault.com|superuser.com|askubuntu.com|stackapps.com|mathoverflow.net)\/q(uestions)?\/\d+/
 // @require        https://code.jquery.com/jquery-2.1.4.min.js
 // @connect        rawgit.com
+// @connect        github.com
 // @connect        chat.stackoverflow.com
 // @connect        chat.stackexchange.com
 // @connect        chat.meta.stackexchange.com
@@ -89,6 +90,46 @@ if(typeof StackExchange === "undefined")
             }
         });
     }
+    function checkIfReported(link, callback) {
+        RoomList.getRoom(function(room){
+            GM_xmlhttpRequest({
+                method: 'GET',
+                url: room.url,
+                onload: function(response) {
+                    var fkey = response.responseText.match(/hidden" value="([\dabcdef]{32})/)[1];
+                    if(!fkey) {
+                        notify('Failed retrieving key, is the room URL valid?');
+                        return false;
+                    }
+                    GM_xmlhttpRequest({
+                        method: 'POST',
+                        url: 'http://chat.stackexchange.com/chats/11540/events',
+                        data: 'mode=Messages&msgCount=100&fkey=' + fkey,
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded"
+                        },
+                        onload: function(response) {
+                            var events = JSON.parse(response.responseText).events;
+                            for (var i = 0; i < events.length; i++){
+                                var domEvent = $("<div>" + events[i].content + "</div>")[0];
+                                var links = Array.prototype.slice.apply(domEvent.getElementsByTagName('a'));
+                                for (var k = 0; k < links.length; k++){
+                                    if (links[i] == link){
+                                        return callback(':' + events[i].message_id + ' ');
+                                    }
+                                }
+                            }
+                            return callback('!!/report ' + document.origin + link);
+                        }
+                    });
+                },
+                onerror: function(resp) {
+                    notify('Failed retrieving fkey from chat. (' + resp.status + ')');
+                }
+            });
+        });
+
+    }
 
     function hideMenu() {
         closeTarget();
@@ -137,7 +178,7 @@ if(typeof StackExchange === "undefined")
     var RoomList = {};
     RoomList.rooms = {};
     RoomList.save = function() {
-        setStorage('rooms',JSON.stringify(this.rooms));
+        setStorage('rooms', JSON.stringify(this.rooms));
         console.log(getStorage('rooms'));
     };
     RoomList.each = function(callback) {
@@ -160,7 +201,7 @@ if(typeof StackExchange === "undefined")
     RoomList.index = function(name) { return this.search('index',name); };
     RoomList.id = function(name)    { return this.search('id',name);    };
     RoomList.url = function(name)   { return this.search('url',name);   };
-    RoomList.insert = function(room) {
+    RoomList.insert = function(room){
         if(!RoomList.url(room.url)) {
             this.rooms[room.url] = room;
             this.save();
@@ -212,7 +253,7 @@ if(typeof StackExchange === "undefined")
             exists = true;
         RoomList.getRoom(function(room) {
             if(room && getStorage(base + 'room') !== room.url) {
-                setStorage(base + 'room',room.url);
+                setStorage(base + 'room', room.url);
                 CVRGUI.roomList.find('[type="checkbox"]').prop('checked',false);
                 if(!exists)
                     CVRGUI.roomList.append($('<dd><label><input type="radio" name="target-room" value="' + room.url + '" checked>' + room.name + '</label><form><button>-</button></form></dd>'));
@@ -243,17 +284,20 @@ if(typeof StackExchange === "undefined")
 
     var CVRGUI = {};
     CVRGUI.wrp    = $('<span class="cvrgui" />');
-    CVRGUI.button = $('<a href="javascript:void(0)" class="cv-button">' + (isclosed?'reopen-pls':'cv-pls') + '</a>');
+    CVRGUI.button = $('<a href="javascript:void(0)" class="cv-button">' + (isclosed ? 'notspam' : 'spam') + '</a>');
     CVRGUI.list   = $('<dl class="cv-list" />');
     CVRGUI.css    = $('<style>.post-menu > span > a{padding:0 3px 2px 3px;color:#888}.post-menu > span > a:hover{color:#444;text-decoration:none} .cvrgui { position:relative;display:inline-block } .cvrgui * { box-sizing: border-box } .cv-list { display: none; margin:0; z-index:1; position:absolute; white-space:nowrap; border:1px solid #ccc;border-radius:3px;background:#FFF;box-shadow:0px 5px 10px -5px rgb(0,0,0,0.5) } .cv-list dd, .cv-list dl { margin: 0; padding: 0; } .cv-list dl dd { padding: 0px; margin: 0; width: 100%; display: table } .cv-list dl label, .cv-list dl form { display: table-cell } .cv-list dl button { margin: 2.5px 0; } .cv-list dl label { width: 100%; padding: 0px; }  .cv-list * { vertical-align: middle; } .cv-list dd > div { padding: 0px 15px; padding-bottom: 15px; } .cv-list dd > div > form { white-space: nowrap } .cv-list dd > div > form > input { display: inline-block; vertical-align: middle } .cv-list dd > div > form > input[type="text"] { width: 300px; margin-right: 5px; } .cv-list hr { margin:0 15px; border: 0px; border-bottom: 1px solid #ccc; } .cv-list a { display: block; padding: 10px 15px;}  .cv-list label { display: inline-block; padding: 10px 15px;} .cv-list label:last-child { padding-left: 0; }</style>');
     CVRGUI.target = (function(){
-        var link = $('<a href="javascript:void(0)"></a>').on('click',function(){
-            var div = $('div', $(this).parent());
-            $('div', CVRGUI.list).not(div).hide();
-            if(div.is(':hidden')) {
-                div.show().find('[type="text"]').focus();
-                $(this).html('Set target room:');
-            } else closeTarget();
+        debugger;
+        var link = $('<a href="javascript:void(0)"></a>').each(function(){
+            $(this).on('click', function(){
+                var div = $('div', $(this).parent());
+                $('div', CVRGUI.list).not(div).hide();
+                if(div.is(':hidden')) {
+                    div.show().find('[type="text"]').focus();
+                    $(this).html('Set target room:');
+                } else closeTarget();
+            });
         });
         RoomList.getRoom(function(room){
             link.html(room.name);
@@ -266,7 +310,7 @@ if(typeof StackExchange === "undefined")
         $('div', CVRGUI.items.send).show();
         $('input[type="text"]', CVRGUI.items.send).focus();
     }
-    CVRGUI.items  = {
+    CVRGUI.items = {
         send:    $('<dd><a href="javascript:void(0)">Send request</a><div style="display:none"><form><input type="text"/><input type="submit" value="Send"></form></div><hr></dd>'),
         room:    (function(){
             var item = $('<dd></dd>');
@@ -318,15 +362,18 @@ if(typeof StackExchange === "undefined")
     CVRGUI.wrp.append(CVRGUI.list);
     CVRGUI.wrp.append(CVRGUI.css);
 
-    $('#question .post-menu').append(CVRGUI.wrp);
-
-    $('.question').on('click', '[type="submit"], .new-post-activity a', function(e){
-        var self = this;
-        var menuCheck = setInterval(function(){
-            if($('#question .post-menu').length === 1) {
-                clearInterval(menuCheck);
-                $('#question .post-menu').append(CVRGUI.wrp);
-            }
+    $('.post-menu').append(CVRGUI.wrp);
+    $('.question, .answer').each(function(){
+        $(this).on('click', '[type="submit"], .new-post-activity a', function(e){
+            var self = this;
+            var menuCheck = setInterval(function(){
+                if($('.post-menu').length > 0) {
+                    clearInterval(menuCheck);
+                    $('.post-menu').each(function(){
+                        $(this).append(CVRGUI.wrp);
+                    })
+                }
+            });
         });
     });
 
@@ -361,13 +408,14 @@ if(typeof StackExchange === "undefined")
         var reason = $('input[type="text"]', CVRGUI.items.send).val();
         if(!reason) return false;
         reason = reasons.get(reason);
-        var tit = '[' + $('#question-header h1 a').text().replace(/\[(.*)\]/g, '($1)') + '](' + base + $('#question .short-link').attr('href') + ')';
-        var usr = $('.post-signature:not([align="right"]) .user-details').text().trim().match(/[^\n]+/)[0].trim(), tim;
-        var tag = $('#question a.post-tag').first().text(); //huh, sponsored tags have images =/ and off-topic tag like C++ are URL encoded -> get the text only
-        if($('#question .owner a').length) usr = '[' + usr + '](' + base + $('#question .owner a').attr('href') + ')';
-        if($('#question .owner .relativetime').length) tim = $('#question .owner .relativetime').attr('title');
-        var result = '[tag:'+ (isclosed?'reopen-pls':'cv-pls') +'] [tag:' + tag + '] ' + reason + ' ' + tit + ' - ' + usr + (tim ? ' - ' + tim : '');
-        sendRequest(result);
+        checkIfReported($('#question .short-link').attr('href'), function(message){
+            if (message.startsWith('!')){
+                sendRequest(message);
+            } else {
+                sendRequest(message + reason);
+            }
+        });
+
     });
 
     CVRGUI.items.update.on('click',function(e){
@@ -413,7 +461,7 @@ if(typeof StackExchange === "undefined")
 
             if($('input', remainingvotes).length) return false;
 
-            var checkbox = $('<label><input type="checkbox" style="vertical-align:middle;margin-left: 5px;">Send cv-pls request</label>');
+            var checkbox = $('<label><input type="checkbox" style="vertical-align:middle;margin-left: 5px;">Send spam report</label>');
 
             $('.remaining-votes', popup).append(checkbox);
             $('[name="close-reason"]').change(function(){
